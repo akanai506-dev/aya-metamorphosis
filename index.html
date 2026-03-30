@@ -801,7 +801,7 @@ body {
 // ============================================================
 const SUPABASE_URL = 'https://zcxvitqrtsbpuqbwdsue.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_f-NtmLsFaS_xZNNkgGZKJg_OfaTvsZK';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ============================================================
 // Data
@@ -882,7 +882,7 @@ let currentWeek = 1;
 async function loginWithGoogle() {
   document.getElementById('login-loading').classList.add('show');
   document.getElementById('btn-google').style.display = 'none';
-  const { error } = await supabase.auth.signInWithOAuth({
+  const { error } = await sb.auth.signInWithOAuth({
     provider: 'google',
     options: { redirectTo: window.location.origin },
   });
@@ -894,7 +894,7 @@ async function loginWithGoogle() {
 }
 
 async function logout() {
-  await supabase.auth.signOut();
+  await sb.auth.signOut();
   currentUser = null;
   showLoginPage();
 }
@@ -915,7 +915,7 @@ function showApp() {
   navigateTo('home');
 }
 
-supabase.auth.onAuthStateChange(async (event, session) => {
+sb.auth.onAuthStateChange(async (event, session) => {
   if (session?.user) {
     currentUser = session.user;
     await loadAllData();
@@ -934,12 +934,12 @@ async function loadAllData() {
 }
 
 async function loadTasks() {
-  const { data, error } = await supabase.from('tasks').select('*').order('id');
+  const { data, error } = await sb.from('tasks').select('*').order('id');
   if (error) { console.error(error); return; }
   if (data.length === 0) {
     // First login: seed default tasks
     const inserts = DEFAULT_TASKS.map(t => ({ week: t.week, text: t.text, completed: false }));
-    const { data: inserted, error: err } = await supabase.from('tasks').insert(inserts).select();
+    const { data: inserted, error: err } = await sb.from('tasks').insert(inserts).select();
     if (err) { console.error(err); return; }
     tasks = inserted;
   } else {
@@ -948,19 +948,19 @@ async function loadTasks() {
 }
 
 async function loadLogs() {
-  const { data, error } = await supabase.from('logs').select('*').order('date', { ascending: false });
+  const { data, error } = await sb.from('logs').select('*').order('date', { ascending: false });
   if (error) { console.error(error); return; }
   logs = data;
 }
 
 async function loadStreak() {
-  const { data, error } = await supabase.from('streaks').select('*').single();
+  const { data, error } = await sb.from('streaks').select('*').single();
   if (error && error.code !== 'PGRST116') { console.error(error); return; }
   if (data) {
     streak = data;
   } else {
     // Create initial streak record
-    const { data: created } = await supabase.from('streaks').insert({ count: 0, last_date: null }).select().single();
+    const { data: created } = await sb.from('streaks').insert({ count: 0, last_date: null }).select().single();
     if (created) streak = created;
   }
 }
@@ -1057,7 +1057,7 @@ async function saveLog() {
     }
     streak.last_date = today;
 
-    await supabase.from('streaks').upsert({
+    await sb.from('streaks').upsert({
       user_id: currentUser.id,
       count: streak.count,
       last_date: streak.last_date,
@@ -1119,7 +1119,7 @@ async function toggleTask(id) {
   if (!task) return;
   task.completed = !task.completed;
   renderTasks();
-  await supabase.from('tasks').update({ completed: task.completed }).eq('id', id);
+  await sb.from('tasks').update({ completed: task.completed }).eq('id', id);
 }
 
 async function addTask() {
@@ -1184,15 +1184,15 @@ function closeModal() {
 
 async function doReset() {
   await Promise.all([
-    supabase.from('logs').delete().eq('user_id', currentUser.id),
-    supabase.from('tasks').delete().eq('user_id', currentUser.id),
-    supabase.from('summaries').delete().eq('user_id', currentUser.id),
-    supabase.from('streaks').update({ count: 0, last_date: null }).eq('user_id', currentUser.id),
+    sb.from('logs').delete().eq('user_id', currentUser.id),
+    sb.from('tasks').delete().eq('user_id', currentUser.id),
+    sb.from('summaries').delete().eq('user_id', currentUser.id),
+    sb.from('streaks').update({ count: 0, last_date: null }).eq('user_id', currentUser.id),
   ]);
 
   // Re-seed default tasks
   const inserts = DEFAULT_TASKS.map(t => ({ week: t.week, text: t.text, completed: false }));
-  const { data: inserted } = await supabase.from('tasks').insert(inserts).select();
+  const { data: inserted } = await sb.from('tasks').insert(inserts).select();
   tasks = inserted || [];
   logs = [];
   streak = { count: 0, last_date: null };
@@ -1247,7 +1247,7 @@ async function summarizeLogs() {
     area.innerHTML = '<div class="summary-content">' + escHtml(data.summary) + '</div>';
 
     // Save summary to DB
-    await supabase.from('summaries').upsert(
+    await sb.from('summaries').upsert(
       { date: today, content: data.summary },
       { onConflict: 'user_id,date' }
     );
@@ -1262,7 +1262,7 @@ async function summarizeLogs() {
 async function renderSummary() {
   const today = getToday();
   const area = document.getElementById('summary-area');
-  const { data } = await supabase.from('summaries').select('content').eq('date', today).single();
+  const { data } = await sb.from('summaries').select('content').eq('date', today).single();
   if (data?.content) {
     area.innerHTML = '<div class="summary-content">' + escHtml(data.content) + '</div>';
   } else {
@@ -1274,7 +1274,7 @@ async function renderSummary() {
 // Init — check existing session
 // ============================================================
 (async () => {
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await sb.auth.getSession();
   if (session?.user) {
     currentUser = session.user;
     await loadAllData();
