@@ -801,7 +801,14 @@ body {
 // ============================================================
 const SUPABASE_URL = 'https://zcxvitqrtsbpuqbwdsue.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_f-NtmLsFaS_xZNNkgGZKJg_OfaTvsZK';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    flowType: 'pkce',
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+  }
+});
 
 // ============================================================
 // Data
@@ -930,7 +937,9 @@ sb.auth.onAuthStateChange(async (event, session) => {
 // Data Loading
 // ============================================================
 async function loadAllData() {
-  await Promise.all([loadTasks(), loadLogs(), loadStreak()]);
+  await loadTasks();
+  await loadLogs();
+  await loadStreak();
 }
 
 async function loadTasks() {
