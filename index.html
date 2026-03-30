@@ -922,16 +922,30 @@ function showApp() {
   navigateTo('home');
 }
 
-sb.auth.onAuthStateChange(async (event, session) => {
+// Initialize auth: use getSession() first, then listen for changes
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
   if (session?.user) {
     currentUser = session.user;
     await loadAllData();
     showApp();
   } else {
-    currentUser = null;
     showLoginPage();
   }
-});
+  // Listen for future auth changes (login/logout after init)
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session?.user) {
+      currentUser = session.user;
+      await loadAllData();
+      showApp();
+    } else if (event === 'SIGNED_OUT') {
+      currentUser = null;
+      showLoginPage();
+    } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+      currentUser = session.user;
+    }
+  });
+})();
 
 // ============================================================
 // Data Loading
