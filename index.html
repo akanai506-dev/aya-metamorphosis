@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>勉強アプリ</title>
+<title>フミダス</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#8B5CF6">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -496,6 +496,74 @@ body {
   100% { transform: scale(1); opacity: 1; }
 }
 .card { animation: pop 0.3s ease; }
+
+/* AI Summary */
+.summary-card {
+  background: linear-gradient(135deg, #F3E8FF, #EDE5F7);
+  border-radius: var(--card-radius);
+  padding: 24px;
+  margin-bottom: 16px;
+}
+.summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.summary-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--main-dark);
+}
+.btn-summarize {
+  padding: 8px 18px;
+  background: linear-gradient(135deg, var(--main), var(--accent));
+  color: var(--white);
+  border: none;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s, opacity 0.2s;
+}
+.btn-summarize:active { transform: scale(0.95); }
+.btn-summarize:disabled { opacity: 0.5; cursor: default; }
+.summary-content {
+  font-size: 0.88rem;
+  line-height: 1.8;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.summary-empty {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  text-align: center;
+  padding: 8px 0;
+}
+.summary-loading {
+  text-align: center;
+  padding: 16px 0;
+  color: var(--main);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+.summary-loading::after {
+  content: '';
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--main);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 </style>
 </head>
 <body>
@@ -518,7 +586,7 @@ body {
 <!-- ===== HOME ===== -->
 <div id="page-home" class="page active">
   <div class="page-header">
-    <h1>勉強アプリ</h1>
+    <h1>フミダス</h1>
   </div>
 
   <div class="character-area">
@@ -535,6 +603,16 @@ body {
     <textarea id="log-input" placeholder="今日学んだことや気づきをひとこと書こう！"></textarea>
     <button class="btn-primary" id="log-btn" onclick="saveLog()">記録する</button>
     <div class="log-saved-msg" id="log-saved-msg"></div>
+  </div>
+
+  <div class="summary-card">
+    <div class="summary-header">
+      <span class="summary-title">今日の学びまとめ</span>
+      <button class="btn-summarize" id="summarize-btn" onclick="summarizeLogs()">AIで要約</button>
+    </div>
+    <div id="summary-area">
+      <div class="summary-empty">記録した内容をAIが箇条書きで要約します</div>
+    </div>
   </div>
 
   <div class="quote-card">
@@ -749,6 +827,9 @@ function renderHome() {
     textarea.value = '';
     savedMsg.textContent = '';
   }
+
+  // Restore saved summary
+  renderSummary();
 }
 
 function getToday() {
@@ -901,6 +982,7 @@ function doReset() {
   localStorage.removeItem('metamorphose_logs');
   localStorage.removeItem('metamorphose_streak');
   localStorage.removeItem('metamorphose_nextTaskId');
+  localStorage.removeItem('metamorphose_summaries');
   tasks = JSON.parse(JSON.stringify(DEFAULT_TASKS));
   logs = [];
   streak = { count: 0, lastDate: null };
@@ -926,6 +1008,57 @@ function escHtml(s) {
   const d = document.createElement('div');
   d.textContent = s;
   return d.innerHTML;
+}
+
+// ============================================================
+// AI Summary
+// ============================================================
+async function summarizeLogs() {
+  const today = getToday();
+  const todayLogs = logs.filter(l => l.date === today);
+  if (todayLogs.length === 0) {
+    showToast('今日のログがありません');
+    return;
+  }
+
+  const btn = document.getElementById('summarize-btn');
+  const area = document.getElementById('summary-area');
+  btn.disabled = true;
+  area.innerHTML = '<div class="summary-loading">要約を生成中</div>';
+
+  try {
+    const res = await fetch('/api/summarize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ logs: todayLogs }),
+    });
+
+    if (!res.ok) throw new Error('API error');
+
+    const data = await res.json();
+    area.innerHTML = '<div class="summary-content">' + escHtml(data.summary) + '</div>';
+
+    // Save summary to localStorage
+    const summaries = load('summaries', {});
+    summaries[today] = data.summary;
+    save('summaries', summaries);
+  } catch (err) {
+    area.innerHTML = '<div class="summary-empty">要約の生成に失敗しました。もう一度お試しください。</div>';
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function renderSummary() {
+  const today = getToday();
+  const summaries = load('summaries', {});
+  const area = document.getElementById('summary-area');
+  if (summaries[today]) {
+    area.innerHTML = '<div class="summary-content">' + escHtml(summaries[today]) + '</div>';
+  } else {
+    area.innerHTML = '<div class="summary-empty">記録した内容をAIが箇条書きで要約します</div>';
+  }
 }
 
 // ============================================================

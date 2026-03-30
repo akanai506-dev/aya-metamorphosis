@@ -1,6 +1,6 @@
 {
-  "name": "勉強アプリ",
-  "short_name": "勉強アプリ",
+  "name": "フミダス",
+  "short_name": "フミダス",
   "description": "AI学習を習慣化するためのアプリ",
   "start_url": "/index.html",
   "display": "standalone",
