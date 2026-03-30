@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -63,6 +64,69 @@ body {
   padding: 24px;
   margin-bottom: 16px;
 }
+
+/* Login Page */
+.login-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: 24px;
+  text-align: center;
+}
+.login-page .login-card {
+  background: var(--white);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+  padding: 40px 32px;
+  max-width: 360px;
+  width: 100%;
+}
+.login-title {
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--main);
+  margin-bottom: 4px;
+}
+.login-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-light);
+  margin-bottom: 32px;
+}
+.login-character {
+  width: 120px;
+  margin-bottom: 16px;
+  animation: float 3s ease-in-out infinite;
+}
+.btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px;
+  background: var(--white);
+  border: 2px solid #D4BFFA;
+  border-radius: 16px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-google:hover { border-color: var(--main); background: #F5F0FF; }
+.btn-google:active { transform: scale(0.97); }
+.btn-google svg { flex-shrink: 0; }
+.login-loading {
+  display: none;
+  text-align: center;
+  padding: 20px;
+  color: var(--main);
+  font-weight: 500;
+}
+.login-loading.show { display: block; }
 
 /* Character */
 .character-area {
@@ -332,10 +396,26 @@ body {
   font-weight: 500;
   margin-bottom: 8px;
 }
+.setting-value {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  margin-bottom: 8px;
+}
 .btn-danger {
   padding: 12px 24px;
   background: #FF4444;
   color: var(--white);
+  border: none;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-logout {
+  padding: 12px 24px;
+  background: #E8E0F0;
+  color: var(--text-light);
   border: none;
   border-radius: 12px;
   font-family: inherit;
@@ -379,7 +459,9 @@ body {
   align-items: center;
   padding-bottom: env(safe-area-inset-bottom, 0);
   z-index: 100;
+  transition: transform 0.3s;
 }
+.bottom-nav.hidden { transform: translateY(100%); }
 .nav-item {
   display: flex;
   flex-direction: column;
@@ -583,8 +665,22 @@ body {
   </div>
 </div>
 
+<!-- ===== LOGIN ===== -->
+<div id="page-login" class="login-page active">
+  <div class="login-card">
+    <img class="login-character" src="caterpillar.png" alt="キャラクター">
+    <div class="login-title">フミダス</div>
+    <div class="login-subtitle">AI学習の習慣を、ここから。</div>
+    <button class="btn-google" id="btn-google" onclick="loginWithGoogle()">
+      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Googleでログイン
+    </button>
+    <div class="login-loading" id="login-loading">ログイン中...</div>
+  </div>
+</div>
+
 <!-- ===== HOME ===== -->
-<div id="page-home" class="page active">
+<div id="page-home" class="page">
   <div class="page-header">
     <h1>フミダス</h1>
   </div>
@@ -666,14 +762,21 @@ body {
 
   <div class="card">
     <div class="setting-item">
+      <div class="setting-label">ログインアカウント</div>
+      <div class="setting-value" id="user-email"></div>
+    </div>
+    <div class="setting-item">
       <div class="setting-label">すべてのデータをリセット</div>
       <button class="btn-danger" onclick="confirmReset()">データリセット</button>
+    </div>
+    <div class="setting-item">
+      <button class="btn-logout" onclick="logout()">ログアウト</button>
     </div>
   </div>
 </div>
 
 <!-- Bottom Nav -->
-<nav class="bottom-nav">
+<nav class="bottom-nav hidden" id="bottom-nav">
   <button class="nav-item active" data-page="home">
     <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/></svg></span>
     <span class="nav-label">ホーム</span>
@@ -694,6 +797,13 @@ body {
 
 <script>
 // ============================================================
+// Supabase Config — REPLACE THESE WITH YOUR VALUES
+// ============================================================
+const SUPABASE_URL = 'https://zcxvitqrtsbpuqbwdsue.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_f-NtmLsFaS_xZNNkgGZKJg_OfaTvsZK';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ============================================================
 // Data
 // ============================================================
 const WEEK_THEMES = {
@@ -708,25 +818,25 @@ const WEEK_THEMES = {
 };
 
 const DEFAULT_TASKS = [
-  { id: 1, week: 1, text: '「次の単語予測」がなぜ高度な能力になるか理解する', completed: false },
-  { id: 2, week: 1, text: '単語→ベクトル変換（埋め込み）の仕組みを学ぶ', completed: false },
-  { id: 3, week: 1, text: '創発（Emergence）の概念を理解する', completed: false },
-  { id: 4, week: 1, text: '本を読む：『誰でもわかる大規模言語モデル入門』', completed: false },
-  { id: 5, week: 2, text: 'Transformerの仕組み（Attention）を学ぶ', completed: false },
-  { id: 6, week: 2, text: '事前学習とファインチューニングの違いを理解', completed: false },
-  { id: 7, week: 2, text: 'noteに「LLMの仕組み」記事を書く', completed: false },
-  { id: 8, week: 3, text: 'プロンプトの基本構造を学ぶ', completed: false },
-  { id: 9, week: 3, text: 'Few-shot / Zero-shot の違いを理解', completed: false },
-  { id: 10, week: 4, text: 'Chain of Thought プロンプトを実践', completed: false },
-  { id: 11, week: 4, text: '業務で使えるプロンプトテンプレート作成', completed: false },
-  { id: 12, week: 5, text: 'RAGの基本概念を学ぶ', completed: false },
-  { id: 13, week: 5, text: 'ベクトルデータベースの仕組みを理解', completed: false },
-  { id: 14, week: 6, text: '類似度検索の仕組みを学ぶ', completed: false },
-  { id: 15, week: 6, text: 'RAGのユースケースを整理', completed: false },
-  { id: 16, week: 7, text: 'AIエージェントの概念を理解', completed: false },
-  { id: 17, week: 7, text: 'MCP（Model Context Protocol）を学ぶ', completed: false },
-  { id: 18, week: 8, text: 'ツール連携の仕組みを理解', completed: false },
-  { id: 19, week: 8, text: '総まとめnote記事を書く', completed: false },
+  { week: 1, text: '「次の単語予測」がなぜ高度な能力になるか理解する' },
+  { week: 1, text: '単語→ベクトル変換（埋め込み）の仕組みを学ぶ' },
+  { week: 1, text: '創発（Emergence）の概念を理解する' },
+  { week: 1, text: '本を読む：『誰でもわかる大規模言語モデル入門』' },
+  { week: 2, text: 'Transformerの仕組み（Attention）を学ぶ' },
+  { week: 2, text: '事前学習とファインチューニングの違いを理解' },
+  { week: 2, text: 'noteに「LLMの仕組み」記事を書く' },
+  { week: 3, text: 'プロンプトの基本構造を学ぶ' },
+  { week: 3, text: 'Few-shot / Zero-shot の違いを理解' },
+  { week: 4, text: 'Chain of Thought プロンプトを実践' },
+  { week: 4, text: '業務で使えるプロンプトテンプレート作成' },
+  { week: 5, text: 'RAGの基本概念を学ぶ' },
+  { week: 5, text: 'ベクトルデータベースの仕組みを理解' },
+  { week: 6, text: '類似度検索の仕組みを学ぶ' },
+  { week: 6, text: 'RAGのユースケースを整理' },
+  { week: 7, text: 'AIエージェントの概念を理解' },
+  { week: 7, text: 'MCP（Model Context Protocol）を学ぶ' },
+  { week: 8, text: 'ツール連携の仕組みを理解' },
+  { week: 8, text: '総まとめnote記事を書く' },
 ];
 
 const QUOTES = [
@@ -758,27 +868,102 @@ const CHARACTER_DATA = {
 };
 
 // ============================================================
-// Storage helpers
-// ============================================================
-function load(key, fallback) {
-  try {
-    const v = localStorage.getItem('metamorphose_' + key);
-    return v ? JSON.parse(v) : fallback;
-  } catch { return fallback; }
-}
-function save(key, val) {
-  localStorage.setItem('metamorphose_' + key, JSON.stringify(val));
-}
-
-// ============================================================
 // State
 // ============================================================
-let tasks = load('tasks', null);
-if (!tasks) { tasks = JSON.parse(JSON.stringify(DEFAULT_TASKS)); save('tasks', tasks); }
-let logs = load('logs', []);
-let streak = load('streak', { count: 0, lastDate: null });
+let currentUser = null;
+let tasks = [];
+let logs = [];
+let streak = { count: 0, last_date: null };
 let currentWeek = 1;
-let nextTaskId = load('nextTaskId', 20);
+
+// ============================================================
+// Auth
+// ============================================================
+async function loginWithGoogle() {
+  document.getElementById('login-loading').classList.add('show');
+  document.getElementById('btn-google').style.display = 'none';
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin },
+  });
+  if (error) {
+    showToast('ログインに失敗しました');
+    document.getElementById('login-loading').classList.remove('show');
+    document.getElementById('btn-google').style.display = 'flex';
+  }
+}
+
+async function logout() {
+  await supabase.auth.signOut();
+  currentUser = null;
+  showLoginPage();
+}
+
+function showLoginPage() {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-login').classList.add('active');
+  document.getElementById('page-login').style.display = 'flex';
+  document.getElementById('bottom-nav').classList.add('hidden');
+  document.body.style.paddingBottom = '0';
+}
+
+function showApp() {
+  document.getElementById('page-login').style.display = 'none';
+  document.getElementById('page-login').classList.remove('active');
+  document.getElementById('bottom-nav').classList.remove('hidden');
+  document.body.style.paddingBottom = 'calc(var(--nav-height) + 16px)';
+  navigateTo('home');
+}
+
+supabase.auth.onAuthStateChange(async (event, session) => {
+  if (session?.user) {
+    currentUser = session.user;
+    await loadAllData();
+    showApp();
+  } else {
+    currentUser = null;
+    showLoginPage();
+  }
+});
+
+// ============================================================
+// Data Loading
+// ============================================================
+async function loadAllData() {
+  await Promise.all([loadTasks(), loadLogs(), loadStreak()]);
+}
+
+async function loadTasks() {
+  const { data, error } = await supabase.from('tasks').select('*').order('id');
+  if (error) { console.error(error); return; }
+  if (data.length === 0) {
+    // First login: seed default tasks
+    const inserts = DEFAULT_TASKS.map(t => ({ week: t.week, text: t.text, completed: false }));
+    const { data: inserted, error: err } = await supabase.from('tasks').insert(inserts).select();
+    if (err) { console.error(err); return; }
+    tasks = inserted;
+  } else {
+    tasks = data;
+  }
+}
+
+async function loadLogs() {
+  const { data, error } = await supabase.from('logs').select('*').order('date', { ascending: false });
+  if (error) { console.error(error); return; }
+  logs = data;
+}
+
+async function loadStreak() {
+  const { data, error } = await supabase.from('streaks').select('*').single();
+  if (error && error.code !== 'PGRST116') { console.error(error); return; }
+  if (data) {
+    streak = data;
+  } else {
+    // Create initial streak record
+    const { data: created } = await supabase.from('streaks').insert({ count: 0, last_date: null }).select().single();
+    if (created) streak = created;
+  }
+}
 
 // ============================================================
 // Navigation
@@ -807,7 +992,7 @@ function getCharacterStage() {
   return 'caterpillar';
 }
 
-function renderHome() {
+async function renderHome() {
   const stage = getCharacterStage();
   const data = CHARACTER_DATA[stage];
   document.getElementById('character').src = data.img;
@@ -829,7 +1014,7 @@ function renderHome() {
   }
 
   // Restore saved summary
-  renderSummary();
+  await renderSummary();
 }
 
 function getToday() {
@@ -837,41 +1022,57 @@ function getToday() {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
 
-function saveLog() {
+async function saveLog() {
   const text = document.getElementById('log-input').value.trim();
   if (!text) return;
 
   const today = getToday();
-  const existing = logs.findIndex(l => l.date === today);
-  if (existing >= 0) {
-    logs[existing].text = text;
+
+  // Upsert log
+  const { data: logData, error } = await supabase
+    .from('logs')
+    .upsert({ date: today, text }, { onConflict: 'user_id,date' })
+    .select()
+    .single();
+
+  if (error) { console.error(error); showToast('保存に失敗しました'); return; }
+
+  // Update local logs
+  const existingIdx = logs.findIndex(l => l.date === today);
+  if (existingIdx >= 0) {
+    logs[existingIdx] = logData;
   } else {
-    logs.push({ date: today, text });
+    logs.unshift(logData);
   }
-  save('logs', logs);
 
   // Update streak
-  if (streak.lastDate !== today) {
+  if (streak.last_date !== today) {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const yStr = yesterday.getFullYear() + '-' + String(yesterday.getMonth() + 1).padStart(2, '0') + '-' + String(yesterday.getDate()).padStart(2, '0');
-    if (streak.lastDate === yStr) {
+    if (streak.last_date === yStr) {
       streak.count++;
-    } else if (streak.lastDate !== today) {
+    } else {
       streak.count = 1;
     }
-    streak.lastDate = today;
-    save('streak', streak);
+    streak.last_date = today;
+
+    await supabase.from('streaks').upsert({
+      user_id: currentUser.id,
+      count: streak.count,
+      last_date: streak.last_date,
+      updated_at: new Date().toISOString(),
+    });
   }
 
   document.getElementById('streak-count').textContent = streak.count;
   document.getElementById('log-saved-msg').textContent = '記録しました！';
 
-  // Re-render character in case of evolution
+  // Re-render character
   const stage = getCharacterStage();
-  const data = CHARACTER_DATA[stage];
-  document.getElementById('character').src = data.img;
-  document.getElementById('character-msg').textContent = data.messages[Math.floor(Math.random() * data.messages.length)];
+  const charData = CHARACTER_DATA[stage];
+  document.getElementById('character').src = charData.img;
+  document.getElementById('character-msg').textContent = charData.messages[Math.floor(Math.random() * charData.messages.length)];
 
   showToast('記録しました！');
 }
@@ -880,7 +1081,6 @@ function saveLog() {
 // Tasks
 // ============================================================
 function renderTasks() {
-  // Week tabs
   const tabsEl = document.getElementById('week-tabs');
   tabsEl.innerHTML = '';
   for (let w = 1; w <= 8; w++) {
@@ -891,10 +1091,8 @@ function renderTasks() {
     tabsEl.appendChild(btn);
   }
 
-  // Theme
   document.getElementById('week-theme').textContent = WEEK_THEMES[currentWeek];
 
-  // Tasks for this week
   const weekTasks = tasks.filter(t => t.week === currentWeek);
   const completed = weekTasks.filter(t => t.completed).length;
   const total = weekTasks.length;
@@ -916,22 +1114,28 @@ function renderTasks() {
   });
 }
 
-function toggleTask(id) {
+async function toggleTask(id) {
   const task = tasks.find(t => t.id === id);
-  if (task) {
-    task.completed = !task.completed;
-    save('tasks', tasks);
-    renderTasks();
-  }
+  if (!task) return;
+  task.completed = !task.completed;
+  renderTasks();
+  await supabase.from('tasks').update({ completed: task.completed }).eq('id', id);
 }
 
-function addTask() {
+async function addTask() {
   const input = document.getElementById('new-task-input');
   const text = input.value.trim();
   if (!text) return;
-  tasks.push({ id: nextTaskId++, week: currentWeek, text, completed: false });
-  save('tasks', tasks);
-  save('nextTaskId', nextTaskId);
+
+  const { data, error } = await supabase
+    .from('tasks')
+    .insert({ week: currentWeek, text, completed: false })
+    .select()
+    .single();
+
+  if (error) { console.error(error); return; }
+
+  tasks.push(data);
   input.value = '';
   renderTasks();
   showToast('タスクを追加しました');
@@ -964,6 +1168,7 @@ function renderLogs() {
 // ============================================================
 function renderSettings() {
   document.getElementById('settings-quote').textContent = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+  document.getElementById('user-email').textContent = currentUser?.email || '';
 }
 
 function confirmReset() {
@@ -977,18 +1182,21 @@ function closeModal() {
   document.getElementById('modal').classList.remove('show');
 }
 
-function doReset() {
-  localStorage.removeItem('metamorphose_tasks');
-  localStorage.removeItem('metamorphose_logs');
-  localStorage.removeItem('metamorphose_streak');
-  localStorage.removeItem('metamorphose_nextTaskId');
-  localStorage.removeItem('metamorphose_summaries');
-  tasks = JSON.parse(JSON.stringify(DEFAULT_TASKS));
+async function doReset() {
+  await Promise.all([
+    supabase.from('logs').delete().eq('user_id', currentUser.id),
+    supabase.from('tasks').delete().eq('user_id', currentUser.id),
+    supabase.from('summaries').delete().eq('user_id', currentUser.id),
+    supabase.from('streaks').update({ count: 0, last_date: null }).eq('user_id', currentUser.id),
+  ]);
+
+  // Re-seed default tasks
+  const inserts = DEFAULT_TASKS.map(t => ({ week: t.week, text: t.text, completed: false }));
+  const { data: inserted } = await supabase.from('tasks').insert(inserts).select();
+  tasks = inserted || [];
   logs = [];
-  streak = { count: 0, lastDate: null };
-  nextTaskId = 20;
-  save('tasks', tasks);
-  save('nextTaskId', nextTaskId);
+  streak = { count: 0, last_date: null };
+
   closeModal();
   navigateTo('home');
   showToast('リセットしました');
@@ -1030,7 +1238,7 @@ async function summarizeLogs() {
     const res = await fetch('/api/summarize', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ logs: todayLogs }),
+      body: JSON.stringify({ logs: todayLogs.map(l => ({ date: l.date, text: l.text })) }),
     });
 
     if (!res.ok) throw new Error('API error');
@@ -1038,10 +1246,11 @@ async function summarizeLogs() {
     const data = await res.json();
     area.innerHTML = '<div class="summary-content">' + escHtml(data.summary) + '</div>';
 
-    // Save summary to localStorage
-    const summaries = load('summaries', {});
-    summaries[today] = data.summary;
-    save('summaries', summaries);
+    // Save summary to DB
+    await supabase.from('summaries').upsert(
+      { date: today, content: data.summary },
+      { onConflict: 'user_id,date' }
+    );
   } catch (err) {
     area.innerHTML = '<div class="summary-empty">要約の生成に失敗しました。もう一度お試しください。</div>';
     console.error(err);
@@ -1050,21 +1259,30 @@ async function summarizeLogs() {
   }
 }
 
-function renderSummary() {
+async function renderSummary() {
   const today = getToday();
-  const summaries = load('summaries', {});
   const area = document.getElementById('summary-area');
-  if (summaries[today]) {
-    area.innerHTML = '<div class="summary-content">' + escHtml(summaries[today]) + '</div>';
+  const { data } = await supabase.from('summaries').select('content').eq('date', today).single();
+  if (data?.content) {
+    area.innerHTML = '<div class="summary-content">' + escHtml(data.content) + '</div>';
   } else {
     area.innerHTML = '<div class="summary-empty">記録した内容をAIが箇条書きで要約します</div>';
   }
 }
 
 // ============================================================
-// Init
+// Init — check existing session
 // ============================================================
-renderHome();
+(async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.user) {
+    currentUser = session.user;
+    await loadAllData();
+    showApp();
+  } else {
+    showLoginPage();
+  }
+})();
 </script>
 </body>
 </html>
