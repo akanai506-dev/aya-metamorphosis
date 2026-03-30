@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>メタモルフォーゼ</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#FF6B35">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --main-orange: #FF6B35;
+  --light-orange: #FF8C5A;
+  --dark-orange: #E55A2B;
+  --coral: #FF7F6B;
+  --yellow: #FFD93D;
+  --pink: #FF6B9D;
+  --white: #FFFFFF;
+  --bg: #FFF5F0;
+  --text: #4A3728;
+  --text-light: #8B7355;
+  --card-radius: 24px;
+  --card-shadow: 0 8px 32px rgba(255, 107, 53, 0.15);
+  --nav-height: 72px;
+}
+
+html, body {
+  font-family: 'Zen Maru Gothic', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  padding-bottom: calc(var(--nav-height) + 16px);
+}
+
+/* Pages */
+.page { display: none; padding: 16px 16px 24px; max-width: 480px; margin: 0 auto; }
+.page.active { display: block; }
+
+/* Header */
+.page-header {
+  text-align: center;
+  padding: 16px 0 8px;
+}
+.page-header h1 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--main-orange);
+}
+
+/* Cards */
+.card {
+  background: var(--white);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+/* Character */
+.character-area {
+  text-align: center;
+  padding: 24px 0 8px;
+  position: relative;
+}
+.character-img {
+  width: 160px;
+  height: auto;
+  animation: float 3s ease-in-out infinite;
+  display: inline-block;
+  object-fit: contain;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+.character-msg {
+  margin-top: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--main-orange);
+  min-height: 1.5em;
+}
+
+/* Streak */
+.streak-area {
+  text-align: center;
+  margin-bottom: 12px;
+}
+.streak-count {
+  font-size: 2.4rem;
+  font-weight: 900;
+  color: var(--dark-orange);
+  line-height: 1;
+}
+.streak-label {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  margin-top: 2px;
+}
+
+/* Daily log */
+.daily-log textarea {
+  width: 100%;
+  min-height: 80px;
+  border: 2px solid #FFD5C2;
+  border-radius: 16px;
+  padding: 14px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+  background: #FFFAF7;
+}
+.daily-log textarea:focus {
+  border-color: var(--main-orange);
+}
+.daily-log textarea::placeholder {
+  color: #CCAA99;
+}
+.btn-primary {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--main-orange), var(--coral));
+  color: var(--white);
+  border: none;
+  border-radius: 16px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 12px;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.btn-primary:active {
+  transform: scale(0.97);
+}
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.log-saved-msg {
+  text-align: center;
+  color: var(--main-orange);
+  font-weight: 500;
+  font-size: 0.9rem;
+  margin-top: 8px;
+  min-height: 1.4em;
+}
+
+/* Week Tabs */
+.week-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.week-tabs::-webkit-scrollbar { display: none; }
+.week-tab {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 2px solid #FFD5C2;
+  background: var(--white);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-light);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.week-tab.active {
+  background: var(--main-orange);
+  color: var(--white);
+  border-color: var(--main-orange);
+}
+
+/* Week Info */
+.week-info {
+  margin: 12px 0;
+}
+.week-theme {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--dark-orange);
+}
+
+/* Progress Bar */
+.progress-bar-wrap {
+  background: #FFE8DC;
+  border-radius: 10px;
+  height: 10px;
+  margin: 12px 0;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--main-orange), var(--yellow));
+  border-radius: 10px;
+  transition: width 0.4s ease;
+}
+.progress-text {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  text-align: right;
+  margin-bottom: 4px;
+}
+
+/* Task List */
+.task-list {
+  list-style: none;
+}
+.task-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #FFF0E8;
+}
+.task-item:last-child { border-bottom: none; }
+.task-check {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  border: 2px solid #FFD5C2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 1px;
+  background: var(--white);
+}
+.task-check.checked {
+  background: var(--main-orange);
+  border-color: var(--main-orange);
+}
+.task-check.checked::after {
+  content: '✓';
+  color: var(--white);
+  font-size: 14px;
+  font-weight: 700;
+}
+.task-text {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  flex: 1;
+}
+.task-text.completed {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+/* Add Task */
+.add-task-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.add-task-row input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 2px solid #FFD5C2;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  outline: none;
+  background: #FFFAF7;
+}
+.add-task-row input:focus { border-color: var(--main-orange); }
+.btn-add {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: none;
+  background: var(--main-orange);
+  color: var(--white);
+  font-size: 1.4rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Log History */
+.log-entry {
+  padding: 16px 0;
+  border-bottom: 1px solid #FFF0E8;
+}
+.log-entry:last-child { border-bottom: none; }
+.log-date {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--main-orange);
+  margin-bottom: 4px;
+}
+.log-text {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.empty-state {
+  text-align: center;
+  color: var(--text-light);
+  padding: 32px 0;
+  font-size: 0.9rem;
+}
+
+/* Settings */
+.setting-item {
+  padding: 16px 0;
+  border-bottom: 1px solid #FFF0E8;
+}
+.setting-item:last-child { border-bottom: none; }
+.setting-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.btn-danger {
+  padding: 12px 24px;
+  background: #FF4444;
+  color: var(--white);
+  border: none;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Quote */
+.quote-card {
+  background: linear-gradient(135deg, #FFF5E6, #FFF0F5);
+  border-radius: var(--card-radius);
+  padding: 24px;
+  margin-bottom: 16px;
+  text-align: center;
+  position: relative;
+}
+.quote-icon {
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: center;
+}
+.quote-text {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.7;
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--nav-height);
+  background: var(--white);
+  border-top: 1px solid #FFE8DC;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  z-index: 100;
+}
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  font-family: inherit;
+  color: var(--text-light);
+  transition: color 0.2s;
+}
+.nav-item.active {
+  color: var(--main-orange);
+}
+.nav-icon {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+.nav-icon svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.nav-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100px);
+  background: var(--main-orange);
+  color: var(--white);
+  padding: 12px 24px;
+  border-radius: 16px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  z-index: 200;
+  transition: transform 0.3s ease;
+  box-shadow: 0 4px 16px rgba(255,107,53,0.3);
+}
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Modal */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 300;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--white);
+  border-radius: var(--card-radius);
+  padding: 28px;
+  max-width: 320px;
+  width: 100%;
+  text-align: center;
+}
+.modal h3 {
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+  color: var(--dark-orange);
+}
+.modal p {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+.modal-btns {
+  display: flex;
+  gap: 10px;
+}
+.modal-btns button {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+}
+.btn-cancel {
+  background: #F0E8E0;
+  color: var(--text-light);
+}
+.btn-confirm {
+  background: #FF4444;
+  color: var(--white);
+}
+
+/* Animations */
+@keyframes pop {
+  0% { transform: scale(0.8); opacity: 0; }
+  70% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.card { animation: pop 0.3s ease; }
+</style>
+</head>
+<body>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<!-- Modal -->
+<div id="modal" class="modal-overlay">
+  <div class="modal">
+    <h3 id="modal-title"></h3>
+    <p id="modal-msg"></p>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">やめる</button>
+      <button class="btn-confirm" id="modal-confirm">リセット</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== HOME ===== -->
+<div id="page-home" class="page active">
+  <div class="page-header">
+    <h1>メタモルフォーゼ</h1>
+  </div>
+
+  <div class="character-area">
+    <img class="character-img" id="character" src="" alt="キャラクター">
+    <div class="character-msg" id="character-msg"></div>
+  </div>
+
+  <div class="streak-area">
+    <div class="streak-count" id="streak-count">0</div>
+    <div class="streak-label">日連続</div>
+  </div>
+
+  <div class="card daily-log">
+    <textarea id="log-input" placeholder="今日学んだことや気づきをひとこと書こう！"></textarea>
+    <button class="btn-primary" id="log-btn" onclick="saveLog()">記録する</button>
+    <div class="log-saved-msg" id="log-saved-msg"></div>
+  </div>
+
+  <div class="quote-card">
+    <div class="quote-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--main-orange)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c0-6-4-10-10-10 6 0 10-4 10-10 0 6 4 10 10 10-6 0-10 4-10 10z"/></svg></div>
+    <div class="quote-text" id="quote-text"></div>
+  </div>
+</div>
+
+<!-- ===== TASKS ===== -->
+<div id="page-tasks" class="page">
+  <div class="page-header">
+    <h1>8週間ロードマップ</h1>
+  </div>
+
+  <div class="week-tabs" id="week-tabs"></div>
+
+  <div class="card">
+    <div class="week-info">
+      <div class="week-theme" id="week-theme"></div>
+    </div>
+    <div class="progress-text" id="progress-text"></div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progress-bar"></div>
+    </div>
+    <ul class="task-list" id="task-list"></ul>
+    <div class="add-task-row">
+      <input type="text" id="new-task-input" placeholder="タスクを追加...">
+      <button class="btn-add" onclick="addTask()">+</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LOGS ===== -->
+<div id="page-logs" class="page">
+  <div class="page-header">
+    <h1>ログ履歴</h1>
+  </div>
+  <div class="card" id="log-history"></div>
+</div>
+
+<!-- ===== SETTINGS ===== -->
+<div id="page-settings" class="page">
+  <div class="page-header">
+    <h1>設定</h1>
+  </div>
+
+  <div class="quote-card">
+    <div class="quote-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--main-orange)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c0-6-4-10-10-10 6 0 10-4 10-10 0 6 4 10 10 10-6 0-10 4-10 10z"/></svg></div>
+    <div class="quote-text" id="settings-quote"></div>
+  </div>
+
+  <div class="card">
+    <div class="setting-item">
+      <div class="setting-label">すべてのデータをリセット</div>
+      <button class="btn-danger" onclick="confirmReset()">データリセット</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <button class="nav-item active" data-page="home">
+    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/></svg></span>
+    <span class="nav-label">ホーム</span>
+  </button>
+  <button class="nav-item" data-page="tasks">
+    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg></span>
+    <span class="nav-label">タスク</span>
+  </button>
+  <button class="nav-item" data-page="logs">
+    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 6.25a.75.75 0 01.75.75v4.19l2.72 2.72a.75.75 0 11-1.06 1.06l-3-3A.75.75 0 0111.25 11V7a.75.75 0 01.75-.75z" fill="currentColor" stroke="none"/><path d="M12 3.75a8.25 8.25 0 100 16.5 8.25 8.25 0 000-16.5z"/></svg></span>
+    <span class="nav-label">ログ</span>
+  </button>
+  <button class="nav-item" data-page="settings">
+    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.573-1.066z"/><circle cx="12" cy="12" r="3"/></svg></span>
+    <span class="nav-label">設定</span>
+  </button>
+</nav>
+
+<script>
+// ============================================================
+// Data
+// ============================================================
+const WEEK_THEMES = {
+  1: 'LLMの仕組み（Transformer・学習・推論）',
+  2: 'LLMの仕組み（Transformer・学習・推論）',
+  3: 'プロンプト設計（体系的な書き方・テクニック）',
+  4: 'プロンプト設計（体系的な書き方・テクニック）',
+  5: 'RAG・ベクトル検索の仕組み',
+  6: 'RAG・ベクトル検索の仕組み',
+  7: 'エージェント・MCP・ツール連携',
+  8: 'エージェント・MCP・ツール連携',
+};
+
+const DEFAULT_TASKS = [
+  { id: 1, week: 1, text: '「次の単語予測」がなぜ高度な能力になるか理解する', completed: false },
+  { id: 2, week: 1, text: '単語→ベクトル変換（埋め込み）の仕組みを学ぶ', completed: false },
+  { id: 3, week: 1, text: '創発（Emergence）の概念を理解する', completed: false },
+  { id: 4, week: 1, text: '本を読む：『誰でもわかる大規模言語モデル入門』', completed: false },
+  { id: 5, week: 2, text: 'Transformerの仕組み（Attention）を学ぶ', completed: false },
+  { id: 6, week: 2, text: '事前学習とファインチューニングの違いを理解', completed: false },
+  { id: 7, week: 2, text: 'noteに「LLMの仕組み」記事を書く', completed: false },
+  { id: 8, week: 3, text: 'プロンプトの基本構造を学ぶ', completed: false },
+  { id: 9, week: 3, text: 'Few-shot / Zero-shot の違いを理解', completed: false },
+  { id: 10, week: 4, text: 'Chain of Thought プロンプトを実践', completed: false },
+  { id: 11, week: 4, text: '業務で使えるプロンプトテンプレート作成', completed: false },
+  { id: 12, week: 5, text: 'RAGの基本概念を学ぶ', completed: false },
+  { id: 13, week: 5, text: 'ベクトルデータベースの仕組みを理解', completed: false },
+  { id: 14, week: 6, text: '類似度検索の仕組みを学ぶ', completed: false },
+  { id: 15, week: 6, text: 'RAGのユースケースを整理', completed: false },
+  { id: 16, week: 7, text: 'AIエージェントの概念を理解', completed: false },
+  { id: 17, week: 7, text: 'MCP（Model Context Protocol）を学ぶ', completed: false },
+  { id: 18, week: 8, text: 'ツール連携の仕組みを理解', completed: false },
+  { id: 19, week: 8, text: '総まとめnote記事を書く', completed: false },
+];
+
+const QUOTES = [
+  '変化の途中は、一番しんどい。でも、それが成長の証。',
+  '完璧じゃなくていい。やり続けることが力になる。',
+  'さなぎの中は暗い。でもその先に羽がある。',
+  '小さな一歩の積み重ねが、大きな変化を生む。',
+  '今日の自分は、昨日の自分より少しだけ強い。',
+  '学ぶことは、未来の自分へのプレゼント。',
+  '迷ったら、とりあえずやってみる。それが一番の近道。',
+  '知らないことに出会えるのは、すごく贅沢なこと。',
+  '続けた先に見える景色がある。',
+  '理解できなくても大丈夫。何度でも戻ってこよう。',
+];
+
+const CHARACTER_DATA = {
+  caterpillar: {
+    img: 'caterpillar.png',
+    messages: ['一緒にがんばろ〜♪', 'まずは一歩ずつ！', 'もぐもぐ知識を食べてるよ！', 'ゆっくりでいいんだよ〜'],
+  },
+  chrysalis: {
+    img: 'chrysalis.png',
+    messages: ['変わってる途中...', '静かに力を蓄えてる', 'もうすぐ何かが起こるよ...', '内側で大きく変化中！'],
+  },
+  butterfly: {
+    img: 'butterfly.png',
+    messages: ['羽ばたいてるね！✨', 'キラキラしてる！', '素敵な変化を遂げたね！', '空高く飛んでいこう！'],
+  },
+};
+
+// ============================================================
+// Storage helpers
+// ============================================================
+function load(key, fallback) {
+  try {
+    const v = localStorage.getItem('metamorphose_' + key);
+    return v ? JSON.parse(v) : fallback;
+  } catch { return fallback; }
+}
+function save(key, val) {
+  localStorage.setItem('metamorphose_' + key, JSON.stringify(val));
+}
+
+// ============================================================
+// State
+// ============================================================
+let tasks = load('tasks', null);
+if (!tasks) { tasks = JSON.parse(JSON.stringify(DEFAULT_TASKS)); save('tasks', tasks); }
+let logs = load('logs', []);
+let streak = load('streak', { count: 0, lastDate: null });
+let currentWeek = 1;
+let nextTaskId = load('nextTaskId', 20);
+
+// ============================================================
+// Navigation
+// ============================================================
+document.querySelectorAll('.nav-item').forEach(btn => {
+  btn.addEventListener('click', () => navigateTo(btn.dataset.page));
+});
+
+function navigateTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelector(`.nav-item[data-page="${page}"]`).classList.add('active');
+  if (page === 'home') renderHome();
+  if (page === 'tasks') renderTasks();
+  if (page === 'logs') renderLogs();
+  if (page === 'settings') renderSettings();
+}
+
+// ============================================================
+// Home
+// ============================================================
+function getCharacterStage() {
+  if (streak.count >= 22) return 'butterfly';
+  if (streak.count >= 8) return 'chrysalis';
+  return 'caterpillar';
+}
+
+function renderHome() {
+  const stage = getCharacterStage();
+  const data = CHARACTER_DATA[stage];
+  document.getElementById('character').src = data.img;
+  document.getElementById('character-msg').textContent = data.messages[Math.floor(Math.random() * data.messages.length)];
+  document.getElementById('streak-count').textContent = streak.count;
+  document.getElementById('quote-text').textContent = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+
+  // Restore today's log if exists
+  const today = getToday();
+  const todayLog = logs.find(l => l.date === today);
+  const textarea = document.getElementById('log-input');
+  const savedMsg = document.getElementById('log-saved-msg');
+  if (todayLog) {
+    textarea.value = todayLog.text;
+    savedMsg.textContent = '今日はもう記録済みです';
+  } else {
+    textarea.value = '';
+    savedMsg.textContent = '';
+  }
+}
+
+function getToday() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function saveLog() {
+  const text = document.getElementById('log-input').value.trim();
+  if (!text) return;
+
+  const today = getToday();
+  const existing = logs.findIndex(l => l.date === today);
+  if (existing >= 0) {
+    logs[existing].text = text;
+  } else {
+    logs.push({ date: today, text });
+  }
+  save('logs', logs);
+
+  // Update streak
+  if (streak.lastDate !== today) {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yStr = yesterday.getFullYear() + '-' + String(yesterday.getMonth() + 1).padStart(2, '0') + '-' + String(yesterday.getDate()).padStart(2, '0');
+    if (streak.lastDate === yStr) {
+      streak.count++;
+    } else if (streak.lastDate !== today) {
+      streak.count = 1;
+    }
+    streak.lastDate = today;
+    save('streak', streak);
+  }
+
+  document.getElementById('streak-count').textContent = streak.count;
+  document.getElementById('log-saved-msg').textContent = '記録しました！';
+
+  // Re-render character in case of evolution
+  const stage = getCharacterStage();
+  const data = CHARACTER_DATA[stage];
+  document.getElementById('character').src = data.img;
+  document.getElementById('character-msg').textContent = data.messages[Math.floor(Math.random() * data.messages.length)];
+
+  showToast('記録しました！');
+}
+
+// ============================================================
+// Tasks
+// ============================================================
+function renderTasks() {
+  // Week tabs
+  const tabsEl = document.getElementById('week-tabs');
+  tabsEl.innerHTML = '';
+  for (let w = 1; w <= 8; w++) {
+    const btn = document.createElement('button');
+    btn.className = 'week-tab' + (w === currentWeek ? ' active' : '');
+    btn.textContent = 'Week ' + w;
+    btn.onclick = () => { currentWeek = w; renderTasks(); };
+    tabsEl.appendChild(btn);
+  }
+
+  // Theme
+  document.getElementById('week-theme').textContent = WEEK_THEMES[currentWeek];
+
+  // Tasks for this week
+  const weekTasks = tasks.filter(t => t.week === currentWeek);
+  const completed = weekTasks.filter(t => t.completed).length;
+  const total = weekTasks.length;
+  const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  document.getElementById('progress-text').textContent = `${completed} / ${total} 完了 (${pct}%)`;
+  document.getElementById('progress-bar').style.width = pct + '%';
+
+  const listEl = document.getElementById('task-list');
+  listEl.innerHTML = '';
+  weekTasks.forEach(task => {
+    const li = document.createElement('li');
+    li.className = 'task-item';
+    li.innerHTML = `
+      <div class="task-check ${task.completed ? 'checked' : ''}" onclick="toggleTask(${task.id})"></div>
+      <span class="task-text ${task.completed ? 'completed' : ''}">${escHtml(task.text)}</span>
+    `;
+    listEl.appendChild(li);
+  });
+}
+
+function toggleTask(id) {
+  const task = tasks.find(t => t.id === id);
+  if (task) {
+    task.completed = !task.completed;
+    save('tasks', tasks);
+    renderTasks();
+  }
+}
+
+function addTask() {
+  const input = document.getElementById('new-task-input');
+  const text = input.value.trim();
+  if (!text) return;
+  tasks.push({ id: nextTaskId++, week: currentWeek, text, completed: false });
+  save('tasks', tasks);
+  save('nextTaskId', nextTaskId);
+  input.value = '';
+  renderTasks();
+  showToast('タスクを追加しました');
+}
+
+document.getElementById('new-task-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addTask();
+});
+
+// ============================================================
+// Logs
+// ============================================================
+function renderLogs() {
+  const el = document.getElementById('log-history');
+  if (logs.length === 0) {
+    el.innerHTML = '<div class="empty-state">まだログがありません</div>';
+    return;
+  }
+  const sorted = [...logs].sort((a, b) => b.date.localeCompare(a.date));
+  el.innerHTML = sorted.map(log => {
+    const d = new Date(log.date + 'T00:00:00');
+    const days = ['日', '月', '火', '水', '木', '金', '土'];
+    const dateStr = `${d.getMonth() + 1}月${d.getDate()}日（${days[d.getDay()]}）`;
+    return `<div class="log-entry"><div class="log-date">${dateStr}</div><div class="log-text">${escHtml(log.text)}</div></div>`;
+  }).join('');
+}
+
+// ============================================================
+// Settings
+// ============================================================
+function renderSettings() {
+  document.getElementById('settings-quote').textContent = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+}
+
+function confirmReset() {
+  document.getElementById('modal-title').textContent = 'データリセット';
+  document.getElementById('modal-msg').textContent = 'すべてのデータ（ログ・タスク・ストリーク）が削除されます。この操作は元に戻せません。';
+  document.getElementById('modal-confirm').onclick = doReset;
+  document.getElementById('modal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+}
+
+function doReset() {
+  localStorage.removeItem('metamorphose_tasks');
+  localStorage.removeItem('metamorphose_logs');
+  localStorage.removeItem('metamorphose_streak');
+  localStorage.removeItem('metamorphose_nextTaskId');
+  tasks = JSON.parse(JSON.stringify(DEFAULT_TASKS));
+  logs = [];
+  streak = { count: 0, lastDate: null };
+  nextTaskId = 20;
+  save('tasks', tasks);
+  save('nextTaskId', nextTaskId);
+  closeModal();
+  navigateTo('home');
+  showToast('リセットしました');
+}
+
+// ============================================================
+// Utils
+// ============================================================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// ============================================================
+// Init
+// ============================================================
+renderHome();
+</script>
+</body>
+</html>
