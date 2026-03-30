@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>メタモルフォーゼ</title>
+<title>勉強アプリ</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#FF6B35">
+<meta name="theme-color" content="#8B5CF6">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -13,18 +13,18 @@
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-  --main-orange: #FF6B35;
-  --light-orange: #FF8C5A;
-  --dark-orange: #E55A2B;
-  --coral: #FF7F6B;
-  --yellow: #FFD93D;
-  --pink: #FF6B9D;
+  --main: #8B5CF6;
+  --main-light: #A78BFA;
+  --main-dark: #7C3AED;
+  --accent: #C084FC;
+  --accent-warm: #E879F9;
+  --accent-soft: #DDD6FE;
   --white: #FFFFFF;
-  --bg: #FFF5F0;
-  --text: #4A3728;
-  --text-light: #8B7355;
+  --bg: #e2c6ff;
+  --text: #3B1F6E;
+  --text-light: #7C6BA0;
   --card-radius: 24px;
-  --card-shadow: 0 8px 32px rgba(255, 107, 53, 0.15);
+  --card-shadow: 0 8px 32px rgba(139, 92, 246, 0.18);
   --nav-height: 72px;
 }
 
@@ -52,7 +52,7 @@ body {
 .page-header h1 {
   font-size: 1.3rem;
   font-weight: 700;
-  color: var(--main-orange);
+  color: var(--main);
 }
 
 /* Cards */
@@ -85,7 +85,7 @@ body {
   margin-top: 8px;
   font-size: 1rem;
   font-weight: 500;
-  color: var(--main-orange);
+  color: var(--main);
   min-height: 1.5em;
 }
 
@@ -97,7 +97,7 @@ body {
 .streak-count {
   font-size: 2.4rem;
   font-weight: 900;
-  color: var(--dark-orange);
+  color: var(--main-dark);
   line-height: 1;
 }
 .streak-label {
@@ -110,7 +110,7 @@ body {
 .daily-log textarea {
   width: 100%;
   min-height: 80px;
-  border: 2px solid #FFD5C2;
+  border: 2px solid #D4BFFA;
   border-radius: 16px;
   padding: 14px;
   font-family: inherit;
@@ -118,19 +118,19 @@ body {
   resize: vertical;
   outline: none;
   transition: border-color 0.2s;
-  background: #FFFAF7;
+  background: #F5F0FF;
 }
 .daily-log textarea:focus {
-  border-color: var(--main-orange);
+  border-color: var(--main);
 }
 .daily-log textarea::placeholder {
-  color: #CCAA99;
+  color: #B0A0C8;
 }
 .btn-primary {
   display: block;
   width: 100%;
   padding: 14px;
-  background: linear-gradient(135deg, var(--main-orange), var(--coral));
+  background: linear-gradient(135deg, var(--main), var(--accent));
   color: var(--white);
   border: none;
   border-radius: 16px;
@@ -150,7 +150,7 @@ body {
 }
 .log-saved-msg {
   text-align: center;
-  color: var(--main-orange);
+  color: var(--main);
   font-weight: 500;
   font-size: 0.9rem;
   margin-top: 8px;
@@ -171,7 +171,7 @@ body {
   flex-shrink: 0;
   padding: 8px 14px;
   border-radius: 20px;
-  border: 2px solid #FFD5C2;
+  border: 2px solid #D4BFFA;
   background: var(--white);
   font-family: inherit;
   font-size: 0.8rem;
@@ -182,9 +182,9 @@ body {
   white-space: nowrap;
 }
 .week-tab.active {
-  background: var(--main-orange);
+  background: var(--main);
   color: var(--white);
-  border-color: var(--main-orange);
+  border-color: var(--main);
 }
 
 /* Week Info */
@@ -194,12 +194,12 @@ body {
 .week-theme {
   font-size: 0.85rem;
   font-weight: 700;
-  color: var(--dark-orange);
+  color: var(--main-dark);
 }
 
 /* Progress Bar */
 .progress-bar-wrap {
-  background: #FFE8DC;
+  background: #E0D4F5;
   border-radius: 10px;
   height: 10px;
   margin: 12px 0;
@@ -207,7 +207,7 @@ body {
 }
 .progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--main-orange), var(--yellow));
+  background: linear-gradient(90deg, var(--main), var(--accent-warm));
   border-radius: 10px;
   transition: width 0.4s ease;
 }
@@ -227,7 +227,7 @@ body {
   align-items: flex-start;
   gap: 12px;
   padding: 12px 0;
-  border-bottom: 1px solid #FFF0E8;
+  border-bottom: 1px solid #EDE5F7;
 }
 .task-item:last-child { border-bottom: none; }
 .task-check {
@@ -235,7 +235,7 @@ body {
   width: 24px;
   height: 24px;
   border-radius: 8px;
-  border: 2px solid #FFD5C2;
+  border: 2px solid #D4BFFA;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -245,8 +245,8 @@ body {
   background: var(--white);
 }
 .task-check.checked {
-  background: var(--main-orange);
-  border-color: var(--main-orange);
+  background: var(--main);
+  border-color: var(--main);
 }
 .task-check.checked::after {
   content: '✓';
@@ -273,21 +273,21 @@ body {
 .add-task-row input {
   flex: 1;
   padding: 10px 14px;
-  border: 2px solid #FFD5C2;
+  border: 2px solid #D4BFFA;
   border-radius: 12px;
   font-family: inherit;
   font-size: 0.9rem;
   outline: none;
-  background: #FFFAF7;
+  background: #F5F0FF;
 }
-.add-task-row input:focus { border-color: var(--main-orange); }
+.add-task-row input:focus { border-color: var(--main); }
 .btn-add {
   flex-shrink: 0;
   width: 44px;
   height: 44px;
   border-radius: 12px;
   border: none;
-  background: var(--main-orange);
+  background: var(--main);
   color: var(--white);
   font-size: 1.4rem;
   cursor: pointer;
@@ -299,13 +299,13 @@ body {
 /* Log History */
 .log-entry {
   padding: 16px 0;
-  border-bottom: 1px solid #FFF0E8;
+  border-bottom: 1px solid #EDE5F7;
 }
 .log-entry:last-child { border-bottom: none; }
 .log-date {
   font-size: 0.8rem;
   font-weight: 700;
-  color: var(--main-orange);
+  color: var(--main);
   margin-bottom: 4px;
 }
 .log-text {
@@ -324,7 +324,7 @@ body {
 /* Settings */
 .setting-item {
   padding: 16px 0;
-  border-bottom: 1px solid #FFF0E8;
+  border-bottom: 1px solid #EDE5F7;
 }
 .setting-item:last-child { border-bottom: none; }
 .setting-label {
@@ -346,7 +346,7 @@ body {
 
 /* Quote */
 .quote-card {
-  background: linear-gradient(135deg, #FFF5E6, #FFF0F5);
+  background: linear-gradient(135deg, #EDE5F7, #F3E8FF);
   border-radius: var(--card-radius);
   padding: 24px;
   margin-bottom: 16px;
@@ -373,7 +373,7 @@ body {
   right: 0;
   height: var(--nav-height);
   background: var(--white);
-  border-top: 1px solid #FFE8DC;
+  border-top: 1px solid #E0D4F5;
   display: flex;
   justify-content: space-around;
   align-items: center;
@@ -394,7 +394,7 @@ body {
   transition: color 0.2s;
 }
 .nav-item.active {
-  color: var(--main-orange);
+  color: var(--main);
 }
 .nav-icon {
   width: 24px;
@@ -421,7 +421,7 @@ body {
   top: 20px;
   left: 50%;
   transform: translateX(-50%) translateY(-100px);
-  background: var(--main-orange);
+  background: var(--main);
   color: var(--white);
   padding: 12px 24px;
   border-radius: 16px;
@@ -429,7 +429,7 @@ body {
   font-size: 0.9rem;
   z-index: 200;
   transition: transform 0.3s ease;
-  box-shadow: 0 4px 16px rgba(255,107,53,0.3);
+  box-shadow: 0 4px 16px rgba(139,92,246,0.3);
 }
 .toast.show {
   transform: translateX(-50%) translateY(0);
@@ -458,7 +458,7 @@ body {
 .modal h3 {
   font-size: 1.1rem;
   margin-bottom: 8px;
-  color: var(--dark-orange);
+  color: var(--main-dark);
 }
 .modal p {
   font-size: 0.85rem;
@@ -481,7 +481,7 @@ body {
   border: none;
 }
 .btn-cancel {
-  background: #F0E8E0;
+  background: #E8E0F0;
   color: var(--text-light);
 }
 .btn-confirm {
@@ -518,7 +518,7 @@ body {
 <!-- ===== HOME ===== -->
 <div id="page-home" class="page active">
   <div class="page-header">
-    <h1>メタモルフォーゼ</h1>
+    <h1>勉強アプリ</h1>
   </div>
 
   <div class="character-area">
@@ -538,7 +538,7 @@ body {
   </div>
 
   <div class="quote-card">
-    <div class="quote-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--main-orange)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c0-6-4-10-10-10 6 0 10-4 10-10 0 6 4 10 10 10-6 0-10 4-10 10z"/></svg></div>
+    <div class="quote-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--main)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c0-6-4-10-10-10 6 0 10-4 10-10 0 6 4 10 10 10-6 0-10 4-10 10z"/></svg></div>
     <div class="quote-text" id="quote-text"></div>
   </div>
 </div>
@@ -582,7 +582,7 @@ body {
   </div>
 
   <div class="quote-card">
-    <div class="quote-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--main-orange)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c0-6-4-10-10-10 6 0 10-4 10-10 0 6 4 10 10 10-6 0-10 4-10 10z"/></svg></div>
+    <div class="quote-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--main)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c0-6-4-10-10-10 6 0 10-4 10-10 0 6 4 10 10 10-6 0-10 4-10 10z"/></svg></div>
     <div class="quote-text" id="settings-quote"></div>
   </div>
 

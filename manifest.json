@@ -1,10 +1,10 @@
 {
-  "name": "メタモルフォーゼ",
-  "short_name": "メタモルフォーゼ",
+  "name": "勉強アプリ",
+  "short_name": "勉強アプリ",
   "description": "AI学習を習慣化するためのアプリ",
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#FFF5F0",
-  "theme_color": "#FF6B35",
+  "theme_color": "#8B5CF6",
   "icons": []
 }
