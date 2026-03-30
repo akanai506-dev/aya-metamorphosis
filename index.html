@@ -1029,7 +1029,7 @@ async function saveLog() {
   const today = getToday();
 
   // Upsert log
-  const { data: logData, error } = await supabase
+  const { data: logData, error } = await sb
     .from('logs')
     .upsert({ date: today, text }, { onConflict: 'user_id,date' })
     .select()
@@ -1127,7 +1127,7 @@ async function addTask() {
   const text = input.value.trim();
   if (!text) return;
 
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from('tasks')
     .insert({ week: currentWeek, text, completed: false })
     .select()
