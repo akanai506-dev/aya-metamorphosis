@@ -1042,16 +1042,21 @@ async function saveLog() {
   const text = document.getElementById('log-input').value.trim();
   if (!text) return;
 
+  if (!currentUser) { showToast('ログインしてください'); return; }
+
   const today = getToday();
+  const btn = document.getElementById('log-btn');
+  btn.disabled = true;
 
-  // Upsert log
-  const { data: logData, error } = await sb
-    .from('logs')
-    .upsert({ date: today, text }, { onConflict: 'user_id,date' })
-    .select()
-    .single();
+  try {
+    // Upsert log with explicit user_id
+    const { data: logData, error } = await sb
+      .from('logs')
+      .upsert({ user_id: currentUser.id, date: today, text }, { onConflict: 'user_id,date' })
+      .select()
+      .single();
 
-  if (error) { console.error(error); showToast('保存に失敗しました'); return; }
+    if (error) { console.error(error); showToast('保存に失敗しました'); return; }
 
   // Update local logs
   const existingIdx = logs.findIndex(l => l.date === today);
@@ -1091,6 +1096,12 @@ async function saveLog() {
   document.getElementById('character-msg').textContent = charData.messages[Math.floor(Math.random() * charData.messages.length)];
 
   showToast('記録しました！');
+  } catch (err) {
+    console.error(err);
+    showToast('エラーが発生しました');
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 // ============================================================
@@ -1145,7 +1156,7 @@ async function addTask() {
 
   const { data, error } = await sb
     .from('tasks')
-    .insert({ week: currentWeek, text, completed: false })
+    .insert({ user_id: currentUser.id, week: currentWeek, text, completed: false })
     .select()
     .single();
 
@@ -1286,19 +1297,6 @@ async function renderSummary() {
   }
 }
 
-// ============================================================
-// Init — check existing session
-// ============================================================
-(async () => {
-  const { data: { session } } = await sb.auth.getSession();
-  if (session?.user) {
-    currentUser = session.user;
-    await loadAllData();
-    showApp();
-  } else {
-    showLoginPage();
-  }
-})();
 </script>
 </body>
 </html>
